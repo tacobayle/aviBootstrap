@@ -1,10 +1,6 @@
-avi_cluster:
-  ip:
-  - 200.1.1.13
-  - 200.1.1.12
-  name: avi-cluster
+avi_cluster: false
 avi_credentials:
-  api_version: v1
-  controller: 200.1.1.11
-  password: toto
+  api_version: 17.2.14
+  controller: 192.168.17.179
+  password: Avi_2019
   username: admin
