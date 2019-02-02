@@ -1,6 +1,6 @@
 # aviBoostrap
 ## Prerequisites:
-1. Make sure 1/3 Vm(s) has/have been deployed with the Avi software installed
+1. Make sure 1 or 3 Vm(s) has/have been deployed with the Avi software installed
 
 
 ## Input:
@@ -35,11 +35,10 @@ avi:
 ```
 
 ## Run the playbook:
-Example:
 ansible-playbook -i hosts main.yml
 
 ## Tests:
 Playbooks have been tested against:
-- Env: Ubuntu 16.04, Azure
+- Environment: Ubuntu 16.04, Azure
 - Avi 17.2.14
 - Ansible 2.7.0
