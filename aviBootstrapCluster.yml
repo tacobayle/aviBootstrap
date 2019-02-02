@@ -1,0 +1,157 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars_files:
+    - "vars/creds.yml"
+    - "vars/params.yml"
+    - "../creds/avicontroller.azure.perso.yml"
+
+
+  roles:
+    - role: "avinetworks.avisdk"
+
+  tasks:
+
+  - name: Update user password
+    avi_useraccount:
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      old_password: 58NFaGDJm(PJH0G
+      api_version: "{{ avi_credentials.api_version }}"
+    ignore_errors: yes
+
+  - name: Create a Cloud connector user
+    avi_cloudconnectoruser:
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      name: "{{ cloudconnectoruser.name }}"
+      azure_serviceprincipal:
+        tenant_id: "{{ azure_serviceprincipal.tenant_id }}"
+        application_id: "{{ azure_serviceprincipal.application_id }}"
+        authentication_token: "{{ azure_serviceprincipal.authentication_token }}"
+    when:
+      - avi_cluster
+      - avi.controller.clusterIpStatus
+      - avi.controller.cloud == "azure"
+
+  - name: Create a Cluster cloud details
+    avi_clusterclouddetails:
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      name: "{{ clusterclouddetails.name }}"
+      azure_info:
+        subscription_id: "{{ azure_serviceprincipal.subscription_id }}"
+        cloud_credential_ref: /api/cloudconnectoruser/?name={{ cloudconnectoruser.name }}
+    when:
+      - avi_cluster
+      - avi.controller.clusterIpStatus
+      - avi.controller.cloud == "azure"
+
+  - name: Get main Cluster Information
+    avi_api_session:
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      http_method: get
+      path: cluster
+    register: cluster_info
+    when: avi_cluster
+
+  - name: Configure Cluster object without ClusterIP
+    avi_cluster:
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      nodes:
+          -
+            name: "{{ avi_credentials.controller }}"
+            ip:
+              type: V4
+              addr: "{{ avi_credentials.controller }}"
+          -
+            name: "{{ avi_cluster.ip.0 }}"
+            ip:
+              type: V4
+              addr: "{{ avi_cluster.ip.0 }}"
+          -
+            name: "{{ avi_cluster.ip.1 }}"
+            ip:
+              type: V4
+              addr: "{{ avi_cluster.ip.1 }}"
+      name: "{{ avi_cluster.name }}"
+      uuid: "{{ cluster_info['obj'].uuid }}"
+    when: avi_cluster and not avi.controller.clusterIpStatus
+
+  - name: Configure Cluster object with ClusterIP
+    avi_cluster:
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      nodes:
+          -
+            name: "{{ avi_credentials.controller }}"
+            ip:
+              type: V4
+              addr: "{{ avi_credentials.controller }}"
+          -
+            name: "{{ avi_cluster.ip.0 }}"
+            ip:
+              type: V4
+              addr: "{{ avi_cluster.ip.0 }}"
+          -
+            name: "{{ avi_cluster.ip.1 }}"
+            ip:
+              type: V4
+              addr: "{{ avi_cluster.ip.1 }}"
+      name: "{{ avi_cluster.name }}"
+      uuid: "{{ cluster_info['obj'].uuid }}"
+      virtual_ip:
+          addr: "{{ avi.controller.clusterIp }}"
+          type: V4
+    when: avi_cluster and avi.controller.clusterIpStatus
+
+  - name: sleep for 120 seconds and continue with play (if cluster has been configured)
+    wait_for: timeout=120
+    delegate_to: localhost
+    when: avi_cluster
+
+  - name: Change the IP of the Avi API endpoint if clusterIp has been configured
+    set_fact:
+      clusterIP: "{{ avi.controller.clusterIp }}"
+    when: avi_cluster and avi.controller.clusterIpStatus
+
+  - name: Don't change the IP of the Avi API endpoint if clusterIp has not been configured
+    set_fact:
+      clusterIP: "{{ avi_credentials.controller }}"
+    when: not avi.controller.clusterIpStatus or not avi_cluster
+
+  - name: Wait for the Controller cluster to finish
+    avi_api_session:
+      controller: "{{ clusterIP }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      http_method: get
+      timeout: 300
+      path: cluster/status
+    register: status
+    until: status.obj.cluster_state.state == "CLUSTER_UP_HA_ACTIVE" or status.obj.cluster_state.state == "CLUSTER_UP_NO_HA"
+    retries: 120
+    delay: 10
+
+  - name: Display Post Message Installation
+    debug:
+      msg:
+        - "The Avi Controller is available at https://{{ clusterIP }}"
+        - "Username: admin"
+        - "Password: {{ avi.controller.newPassword }}"
+        - "Cluster status is: {{ status.obj.cluster_state.state }}"

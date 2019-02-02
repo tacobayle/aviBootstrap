@@ -1,0 +1,26 @@
+---
+- hosts: controller
+  gather_facts: no
+  connection: local
+
+  vars_files:
+    - "vars/params.yml"
+
+  roles:
+    - role: "avinetworks.avisdk"
+
+  tasks:
+
+  - name: generate vars/creds.yml
+    command: "python3 generateYaml.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
+    delegate_to: 127.0.0.1
+
+  - name: "Wait for the portal to become active"
+    uri:
+      url: "https://{{ ansible_host }}/"
+      validate_certs: no
+      status_code: 200
+    register: result
+    until: result.status == 200
+    retries: 300
+    delay: 10
