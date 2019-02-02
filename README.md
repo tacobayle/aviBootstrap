@@ -39,6 +39,6 @@ ansible-playbook -i hosts main.yml
 
 ## Tests:
 Playbooks have been tested against:
-- Environment: Ubuntu 16.04, Azure
-- Avi 17.2.14
+- Environment: Ubuntu 16.04, Azure and GCP
+- Avi 17.2.14, 18.1.5
 - Ansible 2.7.0

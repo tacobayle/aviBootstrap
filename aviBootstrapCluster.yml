@@ -119,8 +119,8 @@
           type: V4
     when: avi_cluster and avi.controller.clusterIpStatus
 
-  - name: sleep for 120 seconds and continue with play (if cluster has been configured)
-    wait_for: timeout=120
+  - name: sleep for 180 seconds and continue with play (if cluster has been configured)
+    wait_for: timeout=180
     delegate_to: localhost
     when: avi_cluster
 

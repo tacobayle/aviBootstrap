@@ -1,6 +1,10 @@
-avi_cluster: false
+avi_cluster:
+  ip:
+  - 172.16.1.38
+  - 172.16.1.39
+  name: avi-cluster
 avi_credentials:
-  api_version: 17.2.14
-  controller: 192.168.17.179
+  api_version: 18.1.5
+  controller: 172.16.1.40
   password: Avi_2019
   username: admin
