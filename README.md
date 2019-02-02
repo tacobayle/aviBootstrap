@@ -4,12 +4,12 @@ Prerequisites:
 
 Input:
 - an inventory file with the following format (could be 1 or 3 controller hosts):
-#---
-#all:
-#  children:
-#    controller:
-#      hosts:
-#        192.168.17.179:
+---
+all:
+  children:
+    controller:
+      hosts:
+        192.168.17.179:
 
 Use the ansible playbook to
 - Generate a yaml file with all the information (to feed the python SDK)
@@ -23,13 +23,13 @@ Use the ansible playbook to
 
 All the paramaters are stored in var/params.yml
 
-# avi:
-#   controller:
-#     newPassword: XXXXXX
-#     version: 17.2.14
-#     clusterIpStatus: true
-#     clusterIp: 172.16.1.10
-#     cloud: azure
+avi:
+  controller:
+    newPassword: XXXXXX
+    version: 17.2.14
+    clusterIpStatus: true
+    clusterIp: 172.16.1.10
+    cloud: azure
 
 Example:
 ansible-playbook -i hosts main.yml
