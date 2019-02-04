@@ -1,7 +1,19 @@
 avi:
   controller:
     newPassword: Avi_2019
-    version: 18.1.5
-    clusterIpStatus: false
+    version: 17.2.14
+    clusterIpStatus: true
     clusterIp: 172.16.1.10
-    cloud: gcp
+    cloud: azure
+
+systemconfiguration:
+  global_tenant_config:
+    se_in_provider_context: false
+    tenant_access_to_provider_se: true
+    tenant_vrf: false
+
+serviceenginegroup:
+  - name: Default-Group
+    ha_mode: HA_MODE_SHARED # N+M
+    #ha_mode: HA_MODE_SHARED_PAIR # Active-Active
+    min_scaleout_per_vs: 1 # required for acitive active

@@ -1,0 +1,49 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars_files:
+    - "vars/creds.yml"
+    - "vars/params.yml"
+
+  roles:
+    - role: "avinetworks.avisdk"
+
+  tasks:
+
+  - name: Change the IP of the Avi API endpoint if clusterIp has been configured
+    set_fact:
+      clusterIP: "{{ avi.controller.clusterIp }}"
+    when: avi_cluster and avi.controller.clusterIpStatus
+
+  - name: Don't change the IP of the Avi API endpoint if clusterIp has not been configured
+    set_fact:
+      clusterIP: "{{ avi_credentials.controller }}"
+    when: not avi.controller.clusterIpStatus or not avi_cluster
+
+  - name: Configure Avi System parameters
+    avi_systemconfiguration:
+      avi_api_update_method: patch
+      avi_api_patch_op: add
+      controller: "{{ clusterIP }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
+      api_version: "{{ avi_credentials.api_version }}"
+      global_tenant_config:
+        se_in_provider_context: "{{ systemconfiguration.global_tenant_config.se_in_provider_context }}"
+        tenant_access_to_provider_se: "{{ systemconfiguration.global_tenant_config.tenant_access_to_provider_se }}"
+        tenant_vrf: "{{ systemconfiguration.global_tenant_config.tenant_vrf }}"
+
+
+  - name: Modify Default SE group
+    avi_serviceenginegroup:
+      avi_api_update_method: patch
+      avi_api_patch_op: add
+      username: '{{ avi_credentials.username }}'
+      controller: '{{ clusterIP }}'
+      password: '{{ avi_credentials.password }}'
+      api_version: '{{ avi_credentials.api_version }}'
+      name: "{{ item.name }}"
+      ha_mode: "{{ item.ha_mode }}"
+      min_scaleout_per_vs: "{{ item.min_scaleout_per_vs }}"
+    loop: "{{ serviceenginegroup }}"
