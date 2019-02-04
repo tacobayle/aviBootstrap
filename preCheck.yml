@@ -11,9 +11,9 @@
 
   tasks:
 
-  - name: generate vars/creds.yml
-    command: "python3 generateYaml.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
-    delegate_to: 127.0.0.1
+  # - name: generate vars/creds.yml
+  #   command: "python3 generateYaml.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
+  #   delegate_to: 127.0.0.1
 
   - name: "Wait for the portal to become active"
     uri:
@@ -24,3 +24,7 @@
     until: result.status == 200
     retries: 300
     delay: 10
+
+  # - name: sleep for 3 seconds and continue with play
+  #   wait_for: timeout=3
+  #   delegate_to: localhost
