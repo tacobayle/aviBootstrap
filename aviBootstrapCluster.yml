@@ -5,7 +5,7 @@
   vars_files:
     # - "vars/creds.yml"
     - "vars/params.yml"
-    - "../creds/avicontroller.azure.perso.yml"
+    - "/home/avi/creds/avicontroller.azure.perso.yml"
 
 
   roles:
