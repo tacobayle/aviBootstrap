@@ -1,7 +1,0 @@
-avi:
-  controller:
-    newPassword: Avi_2019
-    version: 18.1.5
-    clusterIpStatus: false
-    clusterIp: 172.16.1.10
-    cloud: gcp

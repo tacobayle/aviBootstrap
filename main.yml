@@ -1,4 +1,4 @@
 ---
 - import_playbook: preCheck.yml
 - import_playbook: aviBootstrapCluster.yml
-#- import_playbook: aviSystemConfig.yml
+- import_playbook: aviSystemConfig.yml

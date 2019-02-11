@@ -1,7 +1,0 @@
-avi:
-  controller:
-    newPassword: Avi_2019
-    version: 17.2.14
-    clusterIpStatus: true
-    clusterIp: 172.16.1.10
-    cloud: azure

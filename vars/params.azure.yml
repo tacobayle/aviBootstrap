@@ -2,10 +2,10 @@
 avi:
   controller:
     newPassword: Avi_2019
-    version: 18.1.5
+    version: 17.2.14
     clusterIpStatus: true
     clusterIp: 172.16.1.11
-    cloud: lsc
+    cloud: azure
 
 cloudconnectoruser:
   name: user-azure

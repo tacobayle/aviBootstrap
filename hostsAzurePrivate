@@ -7,10 +7,14 @@ all:
     controller:
       hosts:
         172.16.1.5:
-    web:
+    webA:
       hosts:
-        172.16.1.6:
-        172.16.1.7:
+        172.16.32.4:
+        172.16.32.5:
+    webB:
+      hosts:
+        172.16.64.4:
+        172.16.64.5:
   vars:
     ansible_user: "avi"
     ansible_ssh_private_key_file: "/home/avi/.ssh/id_rsa.azure"

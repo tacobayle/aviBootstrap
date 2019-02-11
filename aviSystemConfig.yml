@@ -1,5 +1,5 @@
 ---
-- hosts: localhost
+- hosts: controller
   connection: local
 
   vars_files:
@@ -10,6 +10,23 @@
     - role: "avinetworks.avisdk"
 
   tasks:
+
+  - name: generate vars/creds.yml
+    command: "python3 generateJson.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
+    delegate_to: 127.0.0.1
+    register: generateJson
+
+  - set_fact:
+      avicreds: "{{ generateJson.stdout | from_json }}"
+
+  - name: Change the IP of the Avi API endpoint if clusterIp has been configured
+    command: "python3 generateJsonClusterIp.py vars/params.yml {{ avi.controller.newPassword }} {{ avi.controller.version }}"
+    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
+    register: generateJson
+
+  - set_fact:
+      avicreds: "{{ generateJson.stdout | from_json }}"
+    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
 
   - name: Change the IP of the Avi API endpoint if clusterIp has been configured
     set_fact:
@@ -23,12 +40,13 @@
 
   - name: Configure Avi System parameters
     avi_systemconfiguration:
+      avi_credentials: "{{ avicreds.avi_credentials }}"
       avi_api_update_method: patch
       avi_api_patch_op: add
-      controller: "{{ clusterIP }}"
-      username: "{{ avi_credentials.username }}"
-      password: "{{ avi_credentials.password }}"
-      api_version: "{{ avi_credentials.api_version }}"
+      # controller: "{{ clusterIP }}"
+      # username: "{{ avi_credentials.username }}"
+      # password: "{{ avi_credentials.password }}"
+      # api_version: "{{ avi_credentials.api_version }}"
       global_tenant_config:
         se_in_provider_context: "{{ systemconfiguration.global_tenant_config.se_in_provider_context }}"
         tenant_access_to_provider_se: "{{ systemconfiguration.global_tenant_config.tenant_access_to_provider_se }}"
@@ -39,11 +57,72 @@
     avi_serviceenginegroup:
       avi_api_update_method: patch
       avi_api_patch_op: add
-      username: '{{ avi_credentials.username }}'
-      controller: '{{ clusterIP }}'
-      password: '{{ avi_credentials.password }}'
-      api_version: '{{ avi_credentials.api_version }}'
+      avi_credentials: "{{ avicreds.avi_credentials }}"
+      # username: '{{ avi_credentials.username }}'
+      # controller: '{{ clusterIP }}'
+      # password: '{{ avi_credentials.password }}'
+      # api_version: '{{ avi_credentials.api_version }}'
       name: "{{ item.name }}"
       ha_mode: "{{ item.ha_mode }}"
       min_scaleout_per_vs: "{{ item.min_scaleout_per_vs }}"
     loop: "{{ serviceenginegroup }}"
+    loop_control:
+      label: "Modifying SE group called {{ item.name }}"
+
+  #
+  # vars:
+  #   avi_license: |
+  #     -----BEGIN PGP SIGNED MESSAGE-----
+  #     Hash: SHA1
+  #
+  #     backend_servers: 1000000
+  #     cores: 20
+  #     created_on: 2018-12-19 16:47:56
+  #     days_valid: 195
+  #     enforced_params:
+  #         - cores
+  #     last_update: 2018-12-19 16:47:56
+  #     license_id: 64cd5cc602294897bb5c8bac37b388a8
+  #     license_tier:
+  #         - Avi-Enterprise-18
+  #     license_type: Trial
+  #     name: Customer License File
+  #     customer_name: Customer
+  #     start_on: 2018-12-18 00:00:00
+  #     valid_until: 2019-07-01 00:00:00
+  #     version: 2
+  #     -----BEGIN PGP SIGNATURE-----
+  #     Version: GnuPG v1
+  #
+  #     iQIcBAEBAgAGBQJcGnY8AAoJEGvzPn2hCUfBE4cP/RVrdyOV07579GGUXkSZSAfB
+  #     oKOxM/d2ltpa+3PD51PJwTUN5IQcsXbhGUPEXg0s2TRp5Ir7SanaErBeKNmMgcTP
+  #     Tg70SHjZnkrrl/gGgxkZP7oVH2CgOTNIsqy02p99Tc5Dj+CwUcbGGT2ySrWGhu/W
+  #     WroDpQ22oR31R9EJbXkcjMvPm5mwU3Gwb4J7mfRpYiAO0Z0qzutSxJ5Ly/cTq11s
+  #     Kn/RPwWpUG56JtAQf0+9evLwqM5X9WfU3Wh+3QWWqAG7854QDPkcKYU/5CasU40Q
+  #     g19zrS0LEHsOkk3GbBNdxBhb8DLyqR41mNoETFU3D3BsiKtuUqcItxMs8Bgy7A0j
+  #     jcKeq79Mh9jI/cG1GsOJ0oDM1aEfXY2EtXCximyWMaQ1ZQXGLE7fJuu//TL7GSgH
+  #     MHxQuXkQ6SMsX3vxTSHnvPBsHaJpF0hFTSKhpDhPoZrQ6c8TRJO1lfHWyAPTPrtr
+  #     ePzn2otAf9FIdsnyWXawL1lh+M+FLHuVyAxgy1vq7Ww7nDAY2vqPRrZJj7eRaUe2
+  #     me9PLfrR1ygCnDT52okAY9w5KsjDp+Z/R942pt05yyPpF0F3Yf5PQzZ+0b5o+1XT
+  #     Wctdb7rWOx5c7uWWPlzU8QIB55BwjysQwdBsQ8g7eWLE99BmmFEJxZKVUZJ7dUKk
+  #     O1w+LOMv1fUUhu93dMpK
+  #     =8gNy
+  #     -----END PGP SIGNATURE-----
+  # tasks:
+  #   - name: Upload Avi License to server
+  #     avi_api_session:
+  #       controller: x.x.x.x
+  #       username: admin
+  #       password: password
+  #       api_version: 17.2.14
+  #       http_method: put
+  #       path: license
+  #       data:
+  #         license_text: "{{ avi_license }}"
+
+  - name: Create a json file with variable for next step (AviAzure, AviLscCloud, AviOs)
+    copy:
+      content: "{{ avicreds }}"
+      dest: "{{ item }}"
+    loop: "{{ credsJsonFile }}"
+    delegate_to: 127.0.0.1

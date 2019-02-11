@@ -13,7 +13,7 @@
 
   tasks:
 
-  - debug: var=inventory_file
+  # - debug: var=inventory_file
 
 
   - name: generate vars/creds.yml
@@ -24,7 +24,7 @@
   - set_fact:
       avicreds: "{{ generateJson.stdout | from_json }}"
 
-  - debug: var=avicreds
+  # - debug: var=avicreds
 
   - name: Update user password
     avi_useraccount:
