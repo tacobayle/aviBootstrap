@@ -11,32 +11,32 @@
 
   tasks:
 
-  - name: generate vars/creds.yml
-    command: "python3 generateJson.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
-    delegate_to: 127.0.0.1
+  # - name: generate vars/creds.yml
+  #   command: "python3 generateJson.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
+  #   delegate_to: 127.0.0.1
+  #   register: generateJson
+  #
+  # - set_fact:
+  #     avicreds: "{{ generateJson.stdout | from_json }}"
+
+  - name: Change the IP of the Avi API endpoint if clusterIp has been configured
+    command: "python3 generateJsonClusterIp.py vars/params.yml {{ avi_credentials.password }} {{ avi_credentials.version }}"
+    when: avi_cluster and controller.clusterIpStatus
     register: generateJson
 
   - set_fact:
       avicreds: "{{ generateJson.stdout | from_json }}"
+    when: avi_cluster and controller.clusterIpStatus
 
-  - name: Change the IP of the Avi API endpoint if clusterIp has been configured
-    command: "python3 generateJsonClusterIp.py vars/params.yml {{ avi.controller.newPassword }} {{ avi.controller.version }}"
-    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
-    register: generateJson
-
-  - set_fact:
-      avicreds: "{{ generateJson.stdout | from_json }}"
-    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
-
-  - name: Change the IP of the Avi API endpoint if clusterIp has been configured
-    set_fact:
-      clusterIP: "{{ avi.controller.clusterIp }}"
-    when: avi_cluster and avi.controller.clusterIpStatus
-
-  - name: Don't change the IP of the Avi API endpoint if clusterIp has not been configured
-    set_fact:
-      clusterIP: "{{ avi_credentials.controller }}"
-    when: not avi.controller.clusterIpStatus or not avi_cluster
+  # - name: Change the IP of the Avi API endpoint if clusterIp has been configured
+  #   set_fact:
+  #     clusterIP: "{{ avi.controller.clusterIp }}"
+  #   when: avi_cluster and avi.controller.clusterIpStatus
+  #
+  # - name: Don't change the IP of the Avi API endpoint if clusterIp has not been configured
+  #   set_fact:
+  #     clusterIP: "{{ avi_credentials.controller }}"
+  #   when: not avi.controller.clusterIpStatus or not avi_cluster
 
   - name: Configure Avi System parameters
     avi_systemconfiguration:

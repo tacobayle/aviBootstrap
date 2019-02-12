@@ -36,7 +36,10 @@ username = 'admin'
 with open(hostFile, 'r') as stream:
     data_loaded = yaml.load(stream)
 stream.close
-controllerLeader = [*data_loaded['all']['children']['controller']['hosts']][0]
+try:
+  controllerLeader = [*data_loaded['all']['children']['controller']['hosts']][0]
+except:
+  exit()
 if len([*data_loaded['all']['children']['controller']['hosts']]) == 1:
   avi_credentials = { 'avi_credentials': {'controller' : controllerLeader, 'username': username, 'password': password, 'api_version': version}, 'avi_cluster': False}
 if len([*data_loaded['all']['children']['controller']['hosts']]) == 3:

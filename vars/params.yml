@@ -1,11 +1,8 @@
 ---
-avi:
-  controller:
-    newPassword: Avi_2019
-    version: 18.1.5
-    clusterIpStatus: true
-    clusterIp: 172.16.1.11
-    cloud: lsc
+controller:
+  clusterIpStatus: false
+  clusterIp: 172.16.1.11
+  cloud: lsc
 
 cloudconnectoruser:
   name: user-azure
@@ -24,5 +21,3 @@ serviceenginegroup:
 
 credsJsonFile:
   - ../aviLscCloud/vars/creds.json
-  - ../aviOs/vars/creds.json
-  - ../aviAzure/vars/creds.json

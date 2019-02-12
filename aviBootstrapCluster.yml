@@ -1,9 +1,9 @@
 ---
-- hosts: controller
+- hosts: localhost
   connection: local
 
   vars_files:
-    # - "vars/creds.yml"
+    - "vars/creds.yml"
     - "vars/params.yml"
     - "/home/avi/creds/avicontroller.azure.perso.yml"
 
@@ -16,147 +16,147 @@
   # - debug: var=inventory_file
 
 
-  - name: generate vars/creds.yml
-    command: "python3 generateJson.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
-    delegate_to: 127.0.0.1
-    register: generateJson
-
-  - set_fact:
-      avicreds: "{{ generateJson.stdout | from_json }}"
+  # - name: generate vars/creds.yml
+  #   command: "python3 generateJson.py {{ inventory_file }} {{ avi.controller.newPassword }} {{ avi.controller.version }}"
+  #   delegate_to: 127.0.0.1
+  #   register: generateJson
+  #
+  # - set_fact:
+  #     avicreds: "{{ generateJson.stdout | from_json }}"
 
   # - debug: var=avicreds
 
   - name: Update user password
     avi_useraccount:
-      controller: "{{ avicreds.avi_credentials.controller }}"
-      username: "{{ avicreds.avi_credentials.username }}"
-      password: "{{ avicreds.avi_credentials.password }}"
+      controller: "{{ avi_credentials.controller }}"
+      username: "{{ avi_credentials.username }}"
+      password: "{{ avi_credentials.password }}"
       old_password: 58NFaGDJm(PJH0G
-      api_version: "{{ avicreds.avi_credentials.api_version }}"
+      api_version: "{{ avi_credentials.api_version }}"
     ignore_errors: yes
 
   - name: Create a Cloud connector user
     avi_cloudconnectoruser:
-      avi_credentials: "{{ avicreds.avi_credentials }}"
+      avi_credentials: "{{ avi_credentials }}"
       # controller: "{{ avi_credentials.controller }}"
       # username: "{{ avi_credentials.username }}"
       # password: "{{ avi_credentials.password }}"
-      # api_version: "{{ avi_credentials.api_version }}"
+      api_version: "{{ avi_credentials.api_version }}"
       name: "{{ cloudconnectoruser.name }}"
       azure_serviceprincipal:
         tenant_id: "{{ azure_serviceprincipal.tenant_id }}"
         application_id: "{{ azure_serviceprincipal.application_id }}"
         authentication_token: "{{ azure_serviceprincipal.authentication_token }}"
     when:
-      - avi.controller.cloud == "azure"
+      - controller.cloud == "azure"
 
   - name: Create a Cluster cloud details
     avi_clusterclouddetails:
-      avi_credentials: "{{ avicreds.avi_credentials }}"
+      avi_credentials: "{{ avi_credentials }}"
       # controller: "{{ avi_credentials.controller }}"
       # username: "{{ avi_credentials.username }}"
       # password: "{{ avi_credentials.password }}"
-      # api_version: "{{ avi_credentials.api_version }}"
+      api_version: "{{ avi_credentials.api_version }}"
       name: "{{ clusterclouddetails.name }}"
       azure_info:
         subscription_id: "{{ azure_serviceprincipal.subscription_id }}"
         cloud_credential_ref: /api/cloudconnectoruser/?name={{ cloudconnectoruser.name }}
     when:
-      - avicreds.avi_cluster
-      - avi.controller.clusterIpStatus
-      - avi.controller.cloud == "azure"
+      - avi_cluster
+      - controller.clusterIpStatus
+      - controller.cloud == "azure"
 
   - name: Get main Cluster Information
     avi_api_session:
-      avi_credentials: "{{ avicreds.avi_credentials }}"
+      avi_credentials: "{{ avi_credentials }}"
       # controller: "{{ avi_credentials.controller }}"
       # username: "{{ avi_credentials.username }}"
       # password: "{{ avi_credentials.password }}"
-      # api_version: "{{ avi_credentials.api_version }}"
+      api_version: "{{ avi_credentials.api_version }}"
       http_method: get
       path: cluster
     register: cluster_info
-    when: avicreds.avi_cluster
+    when: avi_cluster
 
   - name: Configure Cluster object without ClusterIP
     avi_cluster:
-      avi_credentials: "{{ avicreds.avi_credentials }}"
+      avi_credentials: "{{ avi_credentials }}"
       # controller: "{{ avi_credentials.controller }}"
       # username: "{{ avi_credentials.username }}"
       # password: "{{ avi_credentials.password }}"
       # api_version: "{{ avi_credentials.api_version }}"
       nodes:
           -
-            name: "{{ avicreds.avi_credentials.controller }}"
+            name: "{{ avi_credentials.controller }}"
             ip:
               type: V4
-              addr: "{{ avicreds.avi_credentials.controller }}"
+              addr: "{{ avi_credentials.controller }}"
           -
-            name: "{{ avicreds.avi_cluster.ip.0 }}"
+            name: "{{ avi_cluster.ip.0 }}"
             ip:
               type: V4
-              addr: "{{ avicreds.avi_cluster.ip.0 }}"
+              addr: "{{ avi_cluster.ip.0 }}"
           -
-            name: "{{ avicreds.avi_cluster.ip.1 }}"
+            name: "{{ avi_cluster.ip.1 }}"
             ip:
               type: V4
-              addr: "{{ avicreds.avi_cluster.ip.1 }}"
+              addr: "{{ avi_cluster.ip.1 }}"
       name: "{{ avi_cluster.name }}"
       uuid: "{{ cluster_info['obj'].uuid }}"
-    when: avicreds.avi_cluster and not avi.controller.clusterIpStatus
+    when: avi_cluster and not controller.clusterIpStatus
 
   - name: Configure Cluster object with ClusterIP
     avi_cluster:
-      avi_credentials: "{{ avicreds.avi_credentials }}"
+      avi_credentials: "{{ avi_credentials }}"
       # controller: "{{ avi_credentials.controller }}"
       # username: "{{ avi_credentials.username }}"
       # password: "{{ avi_credentials.password }}"
       # api_version: "{{ avi_credentials.api_version }}"
       nodes:
           -
-            name: "{{ avicreds.avi_credentials.controller }}"
+            name: "{{ avi_credentials.controller }}"
             ip:
               type: V4
-              addr: "{{ avicreds.avi_credentials.controller }}"
+              addr: "{{ avi_credentials.controller }}"
           -
-            name: "{{ avicreds.avi_cluster.ip.0 }}"
+            name: "{{ avi_cluster.ip.0 }}"
             ip:
               type: V4
-              addr: "{{ avicreds.avi_cluster.ip.0 }}"
+              addr: "{{ avi_cluster.ip.0 }}"
           -
-            name: "{{ avicreds.avi_cluster.ip.1 }}"
+            name: "{{ avi_cluster.ip.1 }}"
             ip:
               type: V4
-              addr: "{{ avicreds.avi_cluster.ip.1 }}"
+              addr: "{{ avi_cluster.ip.1 }}"
       name: "{{ avi_cluster.name }}"
       uuid: "{{ cluster_info['obj'].uuid }}"
       virtual_ip:
-          addr: "{{ avi.controller.clusterIp }}"
+          addr: "{{ controller.clusterIp }}"
           type: V4
-    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
+    when: avi_cluster and controller.clusterIpStatus
 
   - name: sleep for 180 seconds and continue with play (if cluster has been configured)
     wait_for: timeout=180
     delegate_to: localhost
-    when: avicreds.avi_cluster
+    when: avi_cluster
 
   - name: Change the IP of the Avi API endpoint if clusterIp has been configured
-    command: "python3 generateJsonClusterIp.py vars/params.yml {{ avi.controller.newPassword }} {{ avi.controller.version }}"
-    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
+    command: "python3 generateJsonClusterIp.py vars/params.yml {{ avi_credentials.password }} {{ avi_credentials.version }}"
+    when: avi_cluster and controller.clusterIpStatus
     register: generateJson
 
   - set_fact:
       avicreds: "{{ generateJson.stdout | from_json }}"
-    when: avicreds.avi_cluster and avi.controller.clusterIpStatus
+    when: avi_cluster and controller.clusterIpStatus
 
 
   - name: Wait for the Controller cluster to finish
     avi_api_session:
-      avi_credentials: "{{ avicreds.avi_credentials }}"
+      avi_credentials: "{{ avi_credentials }}"
       # controller: "{{ avi_credentials.controller }}"
       # username: "{{ avi_credentials.username }}"
       # password: "{{ avi_credentials.password }}"
-      # api_version: "{{ avi_credentials.api_version }}"
+      api_version: "{{ avi_credentials.api_version }}"
       http_method: get
       timeout: 300
       path: cluster/status
@@ -168,7 +168,7 @@
   - name: Display Post Message Installation
     debug:
       msg:
-        - "The Avi Controller is available at https://{{ avicreds.avi_credentials.controller }}"
+        - "The Avi Controller is available at https://{{ avi_credentials.controller }}"
         - "Username: admin"
-        - "Password: {{ avicreds.avi_credentials.password }}"
+        - "Password: {{ avi_credentials.password }}"
         - "Cluster status is: {{ status.obj.cluster_state.state }}"
