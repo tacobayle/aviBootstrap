@@ -122,7 +122,7 @@
 
   - name: Create a json file with variable for next step (AviAzure, AviLscCloud, AviOs)
     copy:
-      content: "{{ avi_credentials }}"
+      content: "{"avi_credentials": {{ avi_credentials }}}"
       dest: "{{ item }}"
     loop: "{{ credsJsonFile }}"
     delegate_to: 127.0.0.1
