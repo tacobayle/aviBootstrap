@@ -1,6 +1,6 @@
 avi_cluster: false
 avi_credentials:
-  api_version: 18.1.5
-  controller: 200.1.1.11
+  api_version: 17.2.14
+  controller: 172.16.1.5
   password: Avi_2019
   username: admin

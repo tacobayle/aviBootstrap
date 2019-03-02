@@ -2,7 +2,7 @@
 controller:
   clusterIpStatus: false
   clusterIp: 172.16.1.11
-  cloud: openStack
+  cloud: azure
 
 cloudconnectoruser:
   name: user-azure
@@ -22,3 +22,4 @@ serviceenginegroup:
 credsJsonFile:
   - ../aviLscCloud/vars/creds.json
   - ../aviOs/vars/creds.json
+  - ../aviAzure/vars/creds.json
