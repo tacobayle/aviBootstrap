@@ -126,3 +126,4 @@
       dest: "{{ item }}"
     loop: "{{ credsJsonFile }}"
     delegate_to: 127.0.0.1
+    ignore_errors: yes

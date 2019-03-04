@@ -1,0 +1,14 @@
+---
+all:
+  hosts:
+    jump:
+      ansible_host: 23.97.205.226
+    controller1:
+      ansible_host: 104.40.227.113
+    web1team1:
+      ansible_host: 104.40.224.49
+    web2team1:
+      ansible_host: 23.97.228.195
+  vars:
+    ansible_user: "avi"
+    ansible_ssh_private_key_file: "/home/avi/.ssh/id_rsa.azure"
