@@ -2,7 +2,7 @@
 controller:
   clusterIpStatus: false
   clusterIp: 172.16.1.11
-  cloud: azure
+  cloud: lsc
 
 cloudconnectoruser:
   name: user-azure
@@ -23,3 +23,4 @@ credsJsonFile:
   - ../aviLscCloud/vars/creds.json
   - ../aviOs/vars/creds.json
   - ../aviAzure/vars/creds.json
+  - ../aviGslb/vars/creds.json
